@@ -34,15 +34,19 @@ class Cell(object):
     def __init__(self, cellType: str = 'stable',
                  cellState: str = 'healthy',
                  replicationRate: float = 1,
-                 repairRate: float = 0.5):
+                 damageProb: float = 0.01,
+                 repairProb: float = 0.05,
+                 mutationProb: float = 0.05):
 
         self.type = cellTypes[cellType]
         self.state = cellStates[cellState]
         self.replicationRate = replicationRate
-        self.repairRate = repairRate
+        self.damageProb = damageProb
+        self.repairProb = repairProb
+        self.mutationProb = mutationProb
 
 
-def plot_world(world: List[List[Cell]]):
+def color_world(world: List[List[Cell]]):
     # translate the world into a np.ndarray with the specified color values
     coloredWorld = [[None for _ in range(len(world))] for _ in range(len(world))]
 
@@ -54,5 +58,4 @@ def plot_world(world: List[List[Cell]]):
             else:
                 coloredWorld[i][j] = colors[cell.type][cell.state]
 
-    plt.imshow(coloredWorld)
-    plt.show()
+    return coloredWorld

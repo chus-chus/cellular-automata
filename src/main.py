@@ -20,6 +20,7 @@ def main():
     parser.add_argument('den', type=float, default=0.01)
     parser.add_argument('epochs', default=500)
     parser.add_argument('randomSeed', default=888)
+    # diffusion rate
 
     args = parser.parse_args()
 
