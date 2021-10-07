@@ -7,8 +7,8 @@ from utils import Cell, cellStates, plot_world
 def init_world(world: List[List[Cell]], density: float, rng: np.random.default_rng) -> None:
     """ Initialise grid with stable or mutator cells. There are density * len(world) cells placed, half of them
      being stable and half of them being mutator. """
-    rows = rng.choice(len(world), size=round(len(world) * density), replace=False)
-    cols = rng.choice(len(world), size=round(len(world) * density), replace=False)
+    rows = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
+    cols = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
 
     for i in range(0, len(cols) // 2):
         world[rows[i]][cols[i]] = Cell('stable')
@@ -61,10 +61,7 @@ def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.de
     # check what is in each of the picked grid spots and replicate accordingly
     nullFirstCell = True
     for i, cellIndex in enumerate(targetCellIndexes):
-        try:
-            targetCell = world[cellIndex[0]][cellIndex[1]]
-        except:
-            a = 1
+        targetCell = world[cellIndex[0]][cellIndex[1]]
         if i == 0 and targetCell is not None:
             nullFirstCell = False
         elif i == 1:
@@ -127,7 +124,7 @@ def sparse_simulation(args, rng):
 
     # worldSize = args['worldSize']
     worldSize = 300
-    density = 1
+    density = 0.1
     rrMutant = 1.5
     rrStable = 1.2
     epochs = 50
@@ -139,7 +136,7 @@ def sparse_simulation(args, rng):
     statistics = None
     for i in range(epochs):
         forward_generation(world, statistics, rng)
-        if i % 10 == 0:
+        if i % 1 == 0:
             plot_world(world)
 
 
