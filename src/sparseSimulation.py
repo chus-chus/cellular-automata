@@ -1,20 +1,20 @@
 import numpy as np
 from typing import List
 
-from utils import Cell, cellStates
+from utils import Cell, cellStates, plot_world
 
 
 def init_world(world: List[List[Cell]], density: float, rng: np.random.default_rng) -> None:
-    """ Initialise grid with stable or mutant cells. There are density * len(world) cells placed, half of them
-     being stable and half of them being mutant. """
-    rows = rng.choice(len(world), round(len(world) * density), replacement=False)
-    cols = rng.choice(len(world), round(len(world) * density), replacement=False)
+    """ Initialise grid with stable or mutator cells. There are density * len(world) cells placed, half of them
+     being stable and half of them being mutator. """
+    rows = rng.choice(len(world), size=round(len(world) * density), replace=False)
+    cols = rng.choice(len(world), size=round(len(world) * density), replace=False)
 
     for i in range(0, len(cols) // 2):
         world[rows[i]][cols[i]] = Cell('stable')
 
     for i in range(len(cols) // 2, len(cols)):
-        world[rows[i]][cols[i]] = Cell('mutant')
+        world[rows[i]][cols[i]] = Cell('mutator')
 
     return
 
@@ -23,16 +23,26 @@ def compute_statistics(world):
     return 0
 
 
-def choose_moore_domain(i: int, j: int, n: int, rng: np.random.default_rng) -> np.ndarray:
-    """ Choose n indexes w/o replacement in the moore domain centered around i, j.
+def choose_moore_domain(i: int, j: int, n: int, worldSize: int, rng: np.random.default_rng) -> np.ndarray:
+    """ Choose n indexes w/o replacement in the moore domain centered around i, j. Does not consider grid edges.
 
-    :return: a list of indexes as tuples. """
+    :return: a list of indexes as lists. """
 
-    mooreDomain = [(i - 1, j - 1), (i - 1, j), (i - 1, j + 1),
-                   (i,     j - 1),             (i,     j + 1),
-                   (i + 1, j - 1), (i + 1, j), (i + 1, j + 1)]
+    mooreDomain = [[i - 1, j - 1], [i - 1, j], [i - 1, j + 1],
+                   [i,     j - 1],             [i,     j + 1],
+                   [i + 1, j - 1], [i + 1, j], [i + 1, j + 1]]
 
-    return rng.choice(n, mooreDomain, replacement=False)
+    # parse invalid indexes (edges)
+    for i in range(len(mooreDomain)):
+        if mooreDomain[i][0] >= worldSize or mooreDomain[i][0] < 0:
+            mooreDomain[i][0] = None
+        if mooreDomain[i][1] >= worldSize or mooreDomain[i][1] < 0:
+            mooreDomain[i][1] = None
+
+    # delete invalid indexes (edges)
+    mooreDomain = [index for index in mooreDomain if index[0] is not None and index[1] is not None]
+
+    return rng.choice(mooreDomain, size=n, replace=False)
 
 
 def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.default_rng) -> None:
@@ -46,11 +56,15 @@ def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.de
     if centerCell.state == cellStates['damaged']:
         return
 
-    targetCellIndexes = choose_moore_domain(row, col, 2, rng)
+    targetCellIndexes = choose_moore_domain(row, col, 2, len(world), rng)
 
+    # check what is in each of the picked grid spots and replicate accordingly
     nullFirstCell = True
     for i, cellIndex in enumerate(targetCellIndexes):
-        targetCell = world[cellIndex[0]][cellIndex[1]]
+        try:
+            targetCell = world[cellIndex[0]][cellIndex[1]]
+        except:
+            a = 1
         if i == 0 and targetCell is not None:
             nullFirstCell = False
         elif i == 1:
@@ -69,6 +83,7 @@ def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.de
                 if firstCell.type == centerCell.type and firstCell.state == centerCell.state:
                     # replication!
                     world[cellIndex[0]][cellIndex[1]] = centerCell
+    return
 
 
 def forward_generation(world: List[List[Cell]], statistics, rng: np.random.default_rng) -> None:
@@ -85,8 +100,8 @@ def forward_generation(world: List[List[Cell]], statistics, rng: np.random.defau
      world. """
 
     L = len(world)
-    rows = rng.choice(L, L * L, replacement=True)
-    cols = rng.choice(L, L * L, replacement=True)
+    rows = rng.choice(L, L * L, replace=True)
+    cols = rng.choice(L, L * L, replace=True)
     indexes = list(zip(rows, cols))
     for index in indexes:
         row, col = index[0], index[1]
@@ -103,6 +118,7 @@ def forward_generation(world: List[List[Cell]], statistics, rng: np.random.defau
 
     # save statistics
     statistics = compute_statistics(world)
+
     return
 
 
@@ -111,7 +127,7 @@ def sparse_simulation(args, rng):
 
     # worldSize = args['worldSize']
     worldSize = 300
-    density = 0.01
+    density = 1
     rrMutant = 1.5
     rrStable = 1.2
     epochs = 50
@@ -121,5 +137,15 @@ def sparse_simulation(args, rng):
     init_world(world, density, rng)
 
     statistics = None
-    for _ in range(epochs):
+    for i in range(epochs):
         forward_generation(world, statistics, rng)
+        if i % 10 == 0:
+            plot_world(world)
+
+
+def main():
+    sparse_simulation(None, np.random.default_rng(888))
+
+
+if __name__ == "__main__":
+    main()
