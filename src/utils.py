@@ -1,61 +1,34 @@
-PXL_SIZE = 4
-FPS = 30
-
-ITERATIONS = 15
-
-WHITE = [255] * 3
-BLACK = [0] * 3
-RED = [255, 0, 0]
-DARK_RED = [150, 0, 0]
-GREEN = [0, 255, 0]
-DARK_GREEN = [0, 150, 0]
+""" Utility variables, methods and classes """
 
 # celltypes
-STABLE = 1
-MUTATOR = 2
-NONE = 0
+cellTypes = {'stable': 0, 'mutator': 1}
 
 # cellstates
-EMPTY = 0
-HEALTHY = 1
-REPAIRING = 2
-MUTANT = 3
-DEAD = 4
+cellStates = {'healthy': 0, 'repairing': 1, 'mutant': 2}
 
+# grid colors
+__WHITE = [255, 255, 255]
+__BLACK = [0, 0, 0]
+__RED = [255, 0, 0]
+__DARK_RED = [150, 0, 0]
+__GREEN = [0, 255, 0]
+__DARK_GREEN = [0, 150, 0]
 
-class CellState(object):
-    def __init__(self):
-        self.empty = 0
-        self.healthy = 1
-        self.repairing = 2
-        self.mutant = 4
+colors = {'stable': {'healthy': __GREEN, 'repairing': __GREEN, 'mutant': __DARK_GREEN},
+          'mutant': {'healthy': __RED, 'repairing': __RED, 'mutant': __DARK_RED},
+          'empty': __WHITE}
 
 
 class Cell(object):
-    def __init__(self, _type, r):
-        self.type = _type
-        self.state = CELL_STATES['healthy']
+    """ Represents a basic cell, of stable or mutant tyes and with healthy, repairing or mutated states. """
 
-        if self.type == CELL_STATES['healthy']:
-            self.r = r_s
-            self.e = e_s
-        else:
-            self.r = r_m
-            self.e = e_m
+    def __init__(self, cellType: str = 'stable',
+                 cellState: str = 'healthy',
+                 replicationRate: float = 1,
+                 repairRate: float = 0.5):
 
-    def apply_rules(self):
-        if self.state == HEALTHY:
-            if chance(u):
-                if chance(self.e):
-                    self.state = REPAIRING
-                else:
-                    if chance(alpha):
-                        self.state = MUTANT
-                    else:
-                        self.state = DEAD
+        self.type = cellTypes[cellType]
+        self.state = cellStates[cellState]
+        self.replicationRate = replicationRate
+        self.repairRate = repairRate
 
-        if self.state == REPAIRING and chance(beta):
-            self.state = HEALTHY
-
-        if self.state == MUTANT and chance(a):
-            self.state = DEAD
