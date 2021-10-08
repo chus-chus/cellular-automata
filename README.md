@@ -1,2 +1,2 @@
-# celular-automata
-celular automata
+# cellular-automata
+cellular automata
