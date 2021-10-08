@@ -89,7 +89,7 @@ and stable cells. Other parameters are set to default. This outputs the followin
 of `experiment_results/`:
 
 <p align="center">
-    <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/system_evolution.gif" height="200"/>
+    <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/system_evolution.gif" height="300"/>
     <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/total_population_evolution.png" height="300"/>
 </p>
 
