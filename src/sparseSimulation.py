@@ -310,7 +310,7 @@ def sparse_simulation(args, rng):
             return im
 
         anim = animation.FuncAnimation(fig, animate_frame, init_func=init, frames=epochs)
-        anim.save(f'{figurePath}/{expName}/system_evolution.gif', fps=5)
+        anim.save(f'{figurePath}/{expName}/system_evolution.gif', fps=min(min(10, epochs / 20), 24))
     else:
         for i in range(epochs):
             forward_generation(world, diffRate, damageProb, deathProb, mutationProb, mooreDomain, rng)
