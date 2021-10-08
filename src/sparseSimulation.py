@@ -1,5 +1,5 @@
 import os
-from copy import copy
+from copy import copy, deepcopy
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -16,8 +16,7 @@ SIMULATIONSTATS = {'stable': {'total': [], 'healthy': [], 'damaged': [], 'mutate
                    'mutator': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []}}
 
 
-def init_world(world: List[List[Cell]], density: float, stableRR: float, mutatorRR: float,
-               rng: np.random.default_rng) -> None:
+def init_world(world: List[List[Cell]], density: float, args, rng: np.random.default_rng) -> None:
     """ Initialise grid with stable or mutator cells. There are density * len(world) cells placed, half of them
      being stable and half of them being mutator. """
 
@@ -25,10 +24,11 @@ def init_world(world: List[List[Cell]], density: float, stableRR: float, mutator
     cols = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
 
     for i in range(0, len(cols) // 2):
-        world[rows[i]][cols[i]] = Cell('stable', replicationRate=stableRR)
+        world[rows[i]][cols[i]] = Cell('stable', replicationRate=args.stableRR,
+                                       repairProb=args.stableRepairProb)
 
     for i in range(len(cols) // 2, len(cols)):
-        world[rows[i]][cols[i]] = Cell('mutator', replicationRate=mutatorRR)
+        world[rows[i]][cols[i]] = Cell('mutator', replicationRate=args.mutatorRR)
 
     return
 
@@ -79,35 +79,41 @@ def update_statistics(world):
     return
 
 
-def choose_moore_domain(i: int, j: int, n: int, worldSize: int, rng: np.random.default_rng) -> np.ndarray:
-    # todo precompute moore domain for all cells
+def precompute_moore_domain(world):
+    mooreDomain = deepcopy(world)
+    for i in range(len(mooreDomain)):
+        for j in range(len(mooreDomain)):
+            domain = [[i - 1, j - 1], [i - 1, j], [i - 1, j + 1],
+                      [i,     j - 1],             [i,     j + 1],
+                      [i + 1, j - 1], [i + 1, j], [i + 1, j + 1]]
+
+            # parse invalid indexes (edges)
+            for t in range(len(domain)):
+                if domain[t][0] >= len(world) or domain[t][0] < 0:
+                    domain[t][0] = None
+                if domain[t][1] >= len(world) or domain[t][1] < 0:
+                    domain[t][1] = None
+
+            # delete invalid indexes (edges)
+            mooreDomain[i][j] = [index for index in domain if index[0] is not None and index[1] is not None]
+
+    return mooreDomain
+
+
+def choose_moore_domain(row, col, mooreDomain, n, rng) -> np.ndarray:
     """ Choose n indexes w/o replacement in the moore domain centered around i, j. Does not consider grid edges.
 
     :return: a list of indexes as lists. """
 
-    mooreDomain = [[i - 1, j - 1], [i - 1, j], [i - 1, j + 1],
-                   [i,     j - 1],             [i,     j + 1],
-                   [i + 1, j - 1], [i + 1, j], [i + 1, j + 1]]
-
-    # parse invalid indexes (edges)
-    for i in range(len(mooreDomain)):
-        if mooreDomain[i][0] >= worldSize or mooreDomain[i][0] < 0:
-            mooreDomain[i][0] = None
-        if mooreDomain[i][1] >= worldSize or mooreDomain[i][1] < 0:
-            mooreDomain[i][1] = None
-
-    # delete invalid indexes (edges)
-    mooreDomain = [index for index in mooreDomain if index[0] is not None and index[1] is not None]
-
-    return rng.choice(mooreDomain, size=n, replace=False)
+    return rng.choice(mooreDomain[row][col], size=n, replace=False)
 
 
-def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.default_rng) -> None:
+def autoreplicate(world: List[List[Cell]], row: int, col: int, mooreDomain, rng: np.random.default_rng) -> None:
     """ Autoreplication step. Two random cells are chosen in the Moore domain of the cell, and only
      if one of those is of the same type and the other one is empty will the cell replicate, the new one
      being of the same type. """
 
-    centerCell = copy(world[row][col])
+    centerCell = world[row][col]
 
     # replication only happens for mutated or healthy cells
     if centerCell.state == cellStates['damaged']:
@@ -116,7 +122,7 @@ def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.de
     # try to replicate according to the cell replication rate
     replicationTimes = (centerCell.replicationRate // 1) + float(rng.uniform() < centerCell.replicationRate % 1)
     for _ in range(int(replicationTimes)):
-        targetCellIndexes = choose_moore_domain(row, col, 2, len(world), rng)
+        targetCellIndexes = choose_moore_domain(row, col, mooreDomain, 2, rng)
         # check what is in each of the picked grid spots and replicate accordingly
         nullFirstCell = True
         for i, cellIndex in enumerate(targetCellIndexes):
@@ -130,7 +136,7 @@ def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.de
                 elif nullFirstCell and targetCell is not None:
                     if targetCell.type == centerCell.type and targetCell.state == centerCell.state:
                         # replication!
-                        world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = centerCell
+                        world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = deepcopy(centerCell)
                 elif not nullFirstCell and targetCell is not None:
                     # both cells are full, no replication
                     return
@@ -138,18 +144,18 @@ def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.de
                     firstCell = world[targetCellIndexes[0][0]][targetCellIndexes[0][1]]
                     if firstCell.type == centerCell.type and firstCell.state == centerCell.state:
                         # replication!
-                        world[cellIndex[0]][cellIndex[1]] = centerCell
+                        world[cellIndex[0]][cellIndex[1]] = deepcopy(centerCell)
     return
 
 
-def mutate(world, row, col, rng):
-    centerCell = copy(world[row][col])
+def mutate(world, row, col, mutationProb, mooreDomain, rng):
+    centerCell = world[row][col]
 
     # mutation only happens for –--healthy--- damaged cells
     if centerCell.state == cellStates['healthy'] or centerCell.state == cellStates['mutated']:
         return
 
-    targetCellIndexes = choose_moore_domain(row, col, 2, len(world), rng)
+    targetCellIndexes = choose_moore_domain(row, col, mooreDomain, 2, rng)
     # check what is in each of the picked grid spots and replicate accordingly
     nullFirstCell = True
     mutated = False
@@ -164,8 +170,8 @@ def mutate(world, row, col, rng):
             elif nullFirstCell and targetCell is not None:
                 if targetCell.type == centerCell.type and targetCell.state == cellStates['mutated']:
                     # mutation with some probability!
-                    if rng.uniform() < centerCell.mutationProb:
-                        world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = targetCell
+                    if rng.uniform() < mutationProb:
+                        world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = deepcopy(targetCell)
                         mutated = True
             elif not nullFirstCell and targetCell is not None:
                 # both cells are full, no mutation
@@ -174,18 +180,18 @@ def mutate(world, row, col, rng):
                 firstCell = world[targetCellIndexes[0][0]][targetCellIndexes[0][1]]
                 if firstCell.type == centerCell.type and firstCell.state == 'mutated':
                     # mutation with some probability!
-                    if rng.uniform() < centerCell.mutationProb:
-                        world[cellIndex[0]][cellIndex[1]] = firstCell
+                    if rng.uniform() < mutationProb:
+                        world[cellIndex[0]][cellIndex[1]] = deepcopy(firstCell)
                         mutated = True
     # if mutation by moore domain has not happened, a small chance of mutation exists to jumpstart
     if not mutated:
-        if rng.uniform() < 0.01 * centerCell.mutationProb:
+        if rng.uniform() < 0.01 * mutationProb:
             world[row][col].state = cellStates['mutated']
     return
 
 
 def damage(world, row, col, damageProb, rng):
-    centerCell = copy(world[row][col])
+    centerCell = world[row][col]
     # only healthy cells get genetic damage
     if centerCell.state == cellStates['damaged'] or centerCell.state == cellStates['mutated']:
         return
@@ -195,10 +201,10 @@ def damage(world, row, col, damageProb, rng):
         world[row][col] = centerCell
 
 
-def degradation_or_repair(world, row, col, rng):
+def degradation_or_repair(world, row, col, deathProb, rng):
     """ In degradation, either the damaged cell dies or it gets repaired. """
 
-    centerCell = copy(world[row][col])
+    centerCell = world[row][col]
 
     # only damaged cells get degradated or repaired
     if centerCell.state == cellStates['healthy'] or centerCell.state == cellStates['mutated']:
@@ -206,28 +212,28 @@ def degradation_or_repair(world, row, col, rng):
 
     if rng.uniform() < centerCell.repairProb:
         world[row][col].state = cellStates['healthy']
-    elif rng.uniform() < centerCell.deathProb:
+    elif rng.uniform() < deathProb:
         # dies
         world[row][col] = None
     return
 
 
-def diffusion(world, row, col, rng, diffusionRate):
+def diffusion(world, row, col, rng, mooreDomain, diffusionRate):
     """ Diffusion (swap) stage """
 
     centerCell = copy(world[row][col])
-    targetCellIndexes = choose_moore_domain(row, col, 1, len(world), rng)
+    targetCellIndexes = choose_moore_domain(row, col, mooreDomain, 1, rng)
 
     if rng.uniform() < diffusionRate:
         if targetCellIndexes[0] is not None:
-            world[row][col] = world[targetCellIndexes[0][0]][targetCellIndexes[0][1]]
+            world[row][col] = copy(world[targetCellIndexes[0][0]][targetCellIndexes[0][1]])
         else:
             world[row][col] = None
         world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = centerCell
 
 
-def forward_generation(world: List[List[Cell]], diffusionRate: float,
-                       damageProb: float, rng: np.random.default_rng) -> dict:
+def forward_generation(world: List[List[Cell]], diffusionRate: float, damageProb: float,
+                       deathProb: float, mutationProb: float, mooreDomain, rng: np.random.default_rng) -> dict:
 
     """ An evolution epoch. That is, :math:`L^2` random grid spots are chosen. If it's empty, do nothing.
      If a cell is in the grid spot, perform the following steps:
@@ -251,11 +257,11 @@ def forward_generation(world: List[List[Cell]], diffusionRate: float,
             # empty grid spot!
             continue
         else:
-            autoreplicate(world, row, col, rng)
+            autoreplicate(world, row, col, mooreDomain, rng)
             damage(world, row, col, damageProb, rng)
-            mutate(world, row, col, rng)
-            degradation_or_repair(world, row, col, rng)
-            diffusion(world, row, col, rng, diffusionRate)
+            mutate(world, row, col, mutationProb, mooreDomain, rng)
+            degradation_or_repair(world, row, col, deathProb, rng)
+            diffusion(world, row, col, rng, mooreDomain, diffusionRate)
 
     update_statistics(world)
 
@@ -265,15 +271,14 @@ def forward_generation(world: List[List[Cell]], diffusionRate: float,
 def sparse_simulation(args, rng):
     """ In this simulation, cells can only be in healthy, mutated or damaged states. """
 
-    # worldSize = args['worldSize']
-    worldSize = 50
-    density = 0.1
-    rrMutant = 3
-    rrStable = 1.1
-    epochs = 150
-    diffRate = 0.05
-    damageProb = 0.02
-    animate = True
+    worldSize = args.worldSize
+    density = args.popDensity
+    epochs = args.epochs
+    diffRate = args.diffusionRate
+    damageProb = args.damageProb
+    deathProb = args.deathProb
+    mutationProb = args.mutationProb
+    animate = args.createAnimation
 
     dirName = f'experiment_{datetime.now().strftime("%d%m%Y_%H%M%S")}'
     currentPath = pathlib.Path(__file__).parent.resolve()
@@ -282,7 +287,8 @@ def sparse_simulation(args, rng):
 
     world = [[None for _ in range(worldSize)] for _ in range(worldSize)]
 
-    init_world(world, density, rrStable, rrMutant, rng)
+    mooreDomain = precompute_moore_domain(world)
+    init_world(world, density, args, rng)
 
     if animate:
         fig = plt.figure()
@@ -294,7 +300,7 @@ def sparse_simulation(args, rng):
             return im
 
         def animate_frame(_):
-            forward_generation(world, diffRate, damageProb, rng)
+            forward_generation(world, diffRate, damageProb, deathProb, mutationProb, mooreDomain, rng)
             im.set_data(color_world(world))
             return im
 
@@ -302,7 +308,7 @@ def sparse_simulation(args, rng):
         anim.save(f'{dirName}/system_evolution.gif', fps=5)
     else:
         for i in range(epochs):
-            forward_generation(world, diffRate, damageProb, rng)
+            forward_generation(world, diffRate, damageProb, deathProb, mutationProb, mooreDomain, rng)
 
     gen_save_plots(epochs, SIMULATIONSTATS, currentPath / dirName)
 

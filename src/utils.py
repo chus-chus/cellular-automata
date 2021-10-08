@@ -1,6 +1,7 @@
 """ Utility variables, methods and classes """
 
 # celltypes
+import argparse
 import pathlib
 from typing import List
 
@@ -35,16 +36,12 @@ class Cell(object):
     def __init__(self, cellType: str = 'stable',
                  cellState: str = 'healthy',
                  replicationRate: float = 1,
-                 repairProb: float = 0.95,
-                 deathProb: float = 0.05,
-                 mutationProb: float = 0.3):
+                 repairProb: float = 0.95):
 
         self.type = cellTypes[cellType]
         self.state = cellStates[cellState]
         self.replicationRate = replicationRate
         self.repairProb = repairProb
-        self.deathProb = deathProb
-        self.mutationProb = mutationProb
 
 
 def color_world(world: List[List[Cell]]):
@@ -92,7 +89,7 @@ def gen_save_plots(epochs, stats, path):
                           y2=stats['mutator']['total'],
                           xlabel='Epoch', ylabel='Number of cells',
                           line1Legend='Stable cells', line2Legend='Mutator cells',
-                          plotTitle='Pop. evolution. Params go here',
+                          plotTitle='Total population evolution',
                           filepath=path, filename='total_population_evolution')
 
     clear_plots()
@@ -101,7 +98,7 @@ def gen_save_plots(epochs, stats, path):
                           y2=stats['mutator']['healthy'],
                           xlabel='Epoch', ylabel='Number of healthy cells',
                           line1Legend='Stable cells', line2Legend='Mutator cells',
-                          plotTitle='Healhty pop. evolution. Params go here',
+                          plotTitle='Healthy population evolution',
                           filepath=path, filename='healthy_population_evolution')
     clear_plots()
     # mutated cells
@@ -109,7 +106,7 @@ def gen_save_plots(epochs, stats, path):
                           y2=stats['mutator']['mutated'],
                           xlabel='Epoch', ylabel='Number of mutated cells',
                           line1Legend='Stable cells', line2Legend='Mutator cells',
-                          plotTitle='Mutated pop. evolution. Params go here',
+                          plotTitle='Mutated population evolution',
                           filepath=path, filename='mutated_population_evolution')
     # damaged cells
     clear_plots()
@@ -117,5 +114,16 @@ def gen_save_plots(epochs, stats, path):
                           y2=stats['mutator']['damaged'],
                           xlabel='Epoch', ylabel='Number of damaged cells',
                           line1Legend='Stable cells', line2Legend='Mutator cells',
-                          plotTitle='Damaged pop. evolution. Params go here',
+                          plotTitle='Damaged population evolution',
                           filepath=path, filename='damaged_population_evolution')
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
