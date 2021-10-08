@@ -2,7 +2,7 @@
 
 ### Simulator for the study of genetically stable and mutator cell populations in a cancer setting
 
-<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/header_system_evolution.gif" width="150" height="150"/>
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/header_system_evolution.gif"/>
 
 ## Installation
 
@@ -86,12 +86,12 @@ That is, a simulation with 100 epochs, where the replication rates and repair pr
 and stable cells. Other parameters are set to default. This outputs the following figures in the corresponding folder 
 of `experiment_results/`:
 
-<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/system_evolution.gif" width="150" height="150" />
-<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/total_population_evolution.png" width="150" height="150" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/system_evolution.gif" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/total_population_evolution.png" />
 
-<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/healthy_population_evolution.png" width="150" height="150" />
-<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/damaged_population_evolution.png" width="150" height="150" />
-<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/mutated_population_evolution.png" width="150" height="150" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/healthy_population_evolution.png" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/damaged_population_evolution.png" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/mutated_population_evolution.png" />
 
 ## Acknowledgements
 This work has been created for the subject *Mathematical Models in Biology* of the Master of Mathematics @ UPC. The corresponding report
