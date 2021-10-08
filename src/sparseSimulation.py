@@ -7,24 +7,32 @@ from matplotlib import animation
 import numpy as np
 from typing import List
 
-from utils import Cell, cellStates, color_world, cellTypes
+from utils import Cell, cellStates, color_world, cellTypes, gen_save_plots
 
-SIMULATIONSTATS = {'stable': [], 'mutator': []}
+import pathlib
+
+SIMULATIONSTATS = {'stable': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []},
+                   'mutator': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []}}
 
 
 def init_world(world: List[List[Cell]], density: float, stableRR: float, mutatorRR: float,
                rng: np.random.default_rng) -> None:
     """ Initialise grid with stable or mutator cells. There are density * len(world) cells placed, half of them
-     being stable and half of them being mutator. """
+     being stable and half of them being mutator. A proportion of these cells are mutated according to a mutation
+     probability. """
 
     rows = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
     cols = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
 
     for i in range(0, len(cols) // 2):
         world[rows[i]][cols[i]] = Cell('stable', replicationRate=stableRR)
+        if rng.uniform() < world[rows[i]][cols[i]].mutationProb:
+            world[rows[i]][cols[i]].state = cellStates['mutated']
 
     for i in range(len(cols) // 2, len(cols)):
         world[rows[i]][cols[i]] = Cell('mutator', replicationRate=mutatorRR)
+        if rng.uniform() < world[rows[i]][cols[i]].mutationProb:
+            world[rows[i]][cols[i]].state = cellStates['mutated']
 
     return
 
@@ -33,17 +41,44 @@ def update_statistics(world):
     """ Updates or creates a dict with statistics of the current world """
 
     stableCells = 0
+    stableMutated = 0
+    stableDamaged = 0
+    stableHealthy = 0
+
     mutatorCells = 0
+    mutatorMutated = 0
+    mutatorDamaged = 0
+    mutatorHealthy = 0
+
     for i in range(len(world)):
         for j in range(len(world)):
             if world[i][j] is not None:
                 if world[i][j].type == cellTypes['stable']:
                     stableCells += 1
+                    if world[i][j].state == cellStates['mutated']:
+                        stableMutated += 1
+                    elif world[i][j].state == cellStates['damaged']:
+                        stableDamaged += 1
+                    elif world[i][j].state == cellStates['healthy']:
+                        stableHealthy += 1
                 else:
                     mutatorCells += 1
+                    if world[i][j].state == cellStates['mutated']:
+                        mutatorMutated += 1
+                    elif world[i][j].state == cellStates['damaged']:
+                        mutatorDamaged += 1
+                    elif world[i][j].state == cellStates['healthy']:
+                        mutatorHealthy += 1
 
-    SIMULATIONSTATS['stable'].append(stableCells)
-    SIMULATIONSTATS['mutator'].append(mutatorCells)
+    SIMULATIONSTATS['stable']['total'].append(stableCells)
+    SIMULATIONSTATS['stable']['healthy'].append(stableHealthy)
+    SIMULATIONSTATS['stable']['damaged'].append(stableDamaged)
+    SIMULATIONSTATS['stable']['mutated'].append(stableMutated)
+
+    SIMULATIONSTATS['mutator']['total'].append(mutatorCells)
+    SIMULATIONSTATS['mutator']['healthy'].append(mutatorHealthy)
+    SIMULATIONSTATS['mutator']['damaged'].append(mutatorDamaged)
+    SIMULATIONSTATS['mutator']['mutated'].append(mutatorMutated)
 
     return
 
@@ -170,10 +205,9 @@ def degradation_or_repair(world, row, col, rng):
 
     if rng.uniform() < centerCell.repairProb:
         world[row][col].state = cellStates['healthy']
-    else:
+    elif rng.uniform() < centerCell.deathProb:
         # dies
         world[row][col] = None
-
     return
 
 
@@ -219,28 +253,9 @@ def forward_generation(world: List[List[Cell]], diffusionRate: float, rng: np.ra
             degradation_or_repair(world, row, col, rng)
             diffusion(world, row, col, rng, diffusionRate)
 
-    # save statistics
     update_statistics(world)
 
     return
-
-
-def gen_save_plots(epochs, dirName):
-    # clear all plots
-    plt.figure().clear()
-    plt.close()
-    plt.cla()
-    plt.clf()
-
-    # population plot
-    epochs = list(range(epochs))
-    plt.plot(epochs, SIMULATIONSTATS['stable'], label='Stable cells')
-    plt.plot(epochs, SIMULATIONSTATS['mutator'], label='Mutator cells')
-    plt.xlabel('Epoch')
-    plt.ylabel('Number of cells')
-    plt.title('Pop. evolution. Params go here')
-    plt.legend()
-    plt.savefig(f'{dirName}/population_evolution.png', dpi=300)
 
 
 def sparse_simulation(args, rng):
@@ -251,12 +266,14 @@ def sparse_simulation(args, rng):
     density = 0.1
     rrMutant = 1.5
     rrStable = 1.1
-    epochs = 100
+    epochs = 150
     diffRate = 0.05
     animate = True
 
     dirName = f'experiment_{datetime.now().strftime("%d%m%Y_%H%M%S")}'
-    os.mkdir(dirName)
+    currentPath = pathlib.Path(__file__).parent.resolve()
+
+    os.mkdir(currentPath / dirName)
 
     world = [[None for _ in range(worldSize)] for _ in range(worldSize)]
 
@@ -282,7 +299,7 @@ def sparse_simulation(args, rng):
         for i in range(epochs):
             forward_generation(world, diffRate, rng)
 
-    gen_save_plots(epochs, dirName)
+    gen_save_plots(epochs, SIMULATIONSTATS, currentPath / dirName)
 
 
 def main():
