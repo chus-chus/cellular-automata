@@ -9,7 +9,7 @@ import numpy as np
 from typing import List
 
 from utils import Cell, cellStates, color_world, cellTypes, gen_save_plots, init_world, choose_moore_domain, \
-    precompute_moore_domain
+    precompute_moore_domain, parse_all_params
 
 import pathlib
 
@@ -245,6 +245,10 @@ def sparse_simulation(args, rng):
 
     os.mkdir(figurePath / expName)
 
+    # save parameters of the experiment
+    with open(figurePath / expName / "params.txt", "w") as file:
+        file.write(parse_all_params(args))
+
     world = [[None for _ in range(worldSize)] for _ in range(worldSize)]
 
     mooreDomain = precompute_moore_domain(world)
@@ -255,10 +259,12 @@ def sparse_simulation(args, rng):
         data = np.zeros((worldSize, worldSize, 3))
         im = plt.imshow(data)
 
-        plt.tick_params(axis='both',  # changes apply to the x-axis
+        plt.tick_params(axis='both',  # changes apply to both
                         which='both',  # both major and minor ticks are affected
                         bottom=False,  # ticks along the bottom edge are off
                         top=False,  # ticks along the top edge are off
+                        left=False,
+                        labelleft=False,
                         labelbottom=False)
 
         def init():
@@ -271,7 +277,7 @@ def sparse_simulation(args, rng):
             return im
 
         anim = animation.FuncAnimation(fig, animate_frame, init_func=init, frames=epochs)
-        anim.save(f'{figurePath}/{expName}/system_evolution.gif', fps=min(min(10, epochs / 20), 24))
+        anim.save(f'{figurePath}/{expName}/system_evolution.gif', fps=min(max(10, epochs / 20), 24))
     else:
         for i in range(epochs):
             forward_generation(world, diffRate, damageProb, deathProb, mutationProb, mooreDomain, rng)

@@ -175,3 +175,13 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def parse_all_params(args):
+    params = str(vars(args)).split(',')  # ["{'a': 1", ..., "'b': 2}",]
+    params = [p[:p.find(':')] + '\n' + p[p.find(':'):] for p in params]
+    params = ['--' + param for param in params]  # ["--{'a': \n 1", ..., "--'b': \n 2}"]
+    params = '\n'.join(params)  # "--{'a': \n 1 \n ... \n --'b': \n 2}"
+    params = params.replace('{', '').replace('}', '')  # "--'a': \n 1 \n ... \n --'b': \n 2"
+    params = params.replace("'", '').replace(':', '')  # "--a \n 1 \n ... \n --b \n 2"
+    return params.replace(' ', '')
