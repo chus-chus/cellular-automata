@@ -28,7 +28,8 @@ def init_world(world: List[List[Cell]], density: float, args, rng: np.random.def
                                        repairProb=args.stableRepairProb)
 
     for i in range(len(cols) // 2, len(cols)):
-        world[rows[i]][cols[i]] = Cell('mutator', replicationRate=args.mutatorRR)
+        world[rows[i]][cols[i]] = Cell('mutator', replicationRate=args.mutatorRR,
+                                       repairProb=args.mutatorRepairProb)
 
     return
 
@@ -280,10 +281,14 @@ def sparse_simulation(args, rng):
     mutationProb = args.mutationProb
     animate = args.createAnimation
 
-    dirName = f'experiment_{datetime.now().strftime("%d%m%Y_%H%M%S")}'
+    expName = f'experiment_{datetime.now().strftime("%d%m%Y_%H%M%S")}'
     currentPath = pathlib.Path(__file__).parent.resolve()
 
-    os.mkdir(currentPath / dirName)
+    figurePath = currentPath.parent.resolve() / 'experiment_results/'
+    if not figurePath.exists():
+        os.mkdir(figurePath)
+
+    os.mkdir(figurePath / expName)
 
     world = [[None for _ in range(worldSize)] for _ in range(worldSize)]
 
@@ -305,12 +310,12 @@ def sparse_simulation(args, rng):
             return im
 
         anim = animation.FuncAnimation(fig, animate_frame, init_func=init, frames=epochs)
-        anim.save(f'{dirName}/system_evolution.gif', fps=5)
+        anim.save(f'{figurePath}/{expName}/system_evolution.gif', fps=5)
     else:
         for i in range(epochs):
             forward_generation(world, diffRate, damageProb, deathProb, mutationProb, mooreDomain, rng)
 
-    gen_save_plots(epochs, SIMULATIONSTATS, currentPath / dirName)
+    gen_save_plots(epochs, SIMULATIONSTATS, figurePath / expName)
 
 
 def main():

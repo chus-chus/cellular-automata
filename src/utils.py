@@ -16,17 +16,17 @@ cellStates = {'healthy': 0, 'repairing': 1, 'mutated': 2, 'damaged': 3}
 # grid colors
 __WHITE = [255, 255, 255]
 __BLACK = [0, 0, 0]
-__RED = [255, 0, 0]
-__DARK_RED = [150, 0, 0]
-__GREEN = [0, 255, 0]
-__DARK_GREEN = [0, 150, 0]
-__BLUE = [0, 0, 150]
-__DARK_BLUE = [0, 0, 255]
+__RED = [230, 80, 50]
+__DARK_RED = [150, 30, 10]
+__GREEN = [120, 230, 60]
+__DARK_GREEN = [40, 100, 10]
+__BLUE = [100, 190, 210]
+# __DARK_BLUE = [0, 0, 255]
 
 colors = {cellTypes['stable']: {cellStates['healthy']: __GREEN, cellStates['repairing']: __GREEN,
                                 cellStates['mutated']: __DARK_GREEN, cellStates['damaged']: __BLUE},
           cellTypes['mutator']: {cellStates['healthy']: __RED, cellStates['repairing']: __RED,
-                                 cellStates['mutated']: __DARK_RED, cellStates['damaged']: __DARK_BLUE},
+                                 cellStates['mutated']: __DARK_RED, cellStates['damaged']: __BLUE},
           'empty': __WHITE}
 
 
