@@ -8,7 +8,7 @@ import argparse
 import numpy as np
 
 from sparseSimulation import sparse_simulation
-from src.utils import str2bool
+from utils import str2bool
 
 
 def main():
@@ -18,8 +18,11 @@ def main():
      while 'dense' has the board full of stable cells with a small cluster of already established mutator cells. """
     parser.add_argument('--stateCase', choices=['sparse', 'dense'], default='sparse', help=stateCaseHelp)
 
-    popDensityHelp = """ Initial population density, between 0 and 1. Half will be stable and half mutator."""
-    parser.add_argument('--popDensity', type=float, default=0.2, help=popDensityHelp)
+    totalPopDensityHelp = 'Total initial population density.'
+    parser.add_argument('--totalPopDensity', type=float, default=0.2, help=totalPopDensityHelp)
+    popDensityHelp = """ Population density of stable cells given the total pop. density, between 0 and 1. ' \
+                     Mutator pop. will be (1 - arg)."""
+    parser.add_argument('--stablePopDensity', type=float, default=0.5, help=popDensityHelp)
 
     parser.add_argument('--epochs', type=int, default=150, help='Number of generations to simulate.')
     parser.add_argument('--worldSize', type=int, default=50, help='Width and height of the grid.')

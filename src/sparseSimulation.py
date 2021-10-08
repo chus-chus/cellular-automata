@@ -8,30 +8,12 @@ from matplotlib import animation
 import numpy as np
 from typing import List
 
-from utils import Cell, cellStates, color_world, cellTypes, gen_save_plots
+from utils import Cell, cellStates, color_world, cellTypes, gen_save_plots, init_world
 
 import pathlib
 
 SIMULATIONSTATS = {'stable': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []},
                    'mutator': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []}}
-
-
-def init_world(world: List[List[Cell]], density: float, args, rng: np.random.default_rng) -> None:
-    """ Initialise grid with stable or mutator cells. There are density * len(world) cells placed, half of them
-     being stable and half of them being mutator. """
-
-    rows = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
-    cols = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
-
-    for i in range(0, len(cols) // 2):
-        world[rows[i]][cols[i]] = Cell('stable', replicationRate=args.stableRR,
-                                       repairProb=args.stableRepairProb)
-
-    for i in range(len(cols) // 2, len(cols)):
-        world[rows[i]][cols[i]] = Cell('mutator', replicationRate=args.mutatorRR,
-                                       repairProb=args.mutatorRepairProb)
-
-    return
 
 
 def update_statistics(world):
@@ -273,7 +255,8 @@ def sparse_simulation(args, rng):
     """ In this simulation, cells can only be in healthy, mutated or damaged states. """
 
     worldSize = args.worldSize
-    density = args.popDensity
+    totalPopDensity = args.totalPopDensity
+    stableDensity = args.stablePopDensity
     epochs = args.epochs
     diffRate = args.diffusionRate
     damageProb = args.damageProb
@@ -293,7 +276,7 @@ def sparse_simulation(args, rng):
     world = [[None for _ in range(worldSize)] for _ in range(worldSize)]
 
     mooreDomain = precompute_moore_domain(world)
-    init_world(world, density, args, rng)
+    init_world(world, totalPopDensity, stableDensity, args, rng)
 
     if animate:
         fig = plt.figure()

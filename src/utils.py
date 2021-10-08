@@ -2,11 +2,10 @@
 
 # celltypes
 import argparse
-import pathlib
 from typing import List
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 cellTypes = {'stable': 0, 'mutator': 1}
 
@@ -42,6 +41,25 @@ class Cell(object):
         self.state = cellStates[cellState]
         self.replicationRate = replicationRate
         self.repairProb = repairProb
+
+
+def init_world(world: List[List[Cell]], totalDensity: float, stableDensity: float,
+               args, rng: np.random.default_rng) -> None:
+    """ Initialise grid with stable or mutator cells. There are density * len(world) cells placed, half of them
+     being stable and half of them being mutator. """
+
+    rows = rng.choice(len(world), size=round(len(world) * len(world) * totalDensity), replace=True)
+    cols = rng.choice(len(world), size=round(len(world) * len(world) * totalDensity), replace=True)
+
+    for i in range(0, int(len(cols) * stableDensity)):
+        world[rows[i]][cols[i]] = Cell('stable', replicationRate=args.stableRR,
+                                       repairProb=args.stableRepairProb)
+
+    for i in range(int(len(cols) * stableDensity), len(cols)):
+        world[rows[i]][cols[i]] = Cell('mutator', replicationRate=args.mutatorRR,
+                                       repairProb=args.mutatorRepairProb)
+
+    return
 
 
 def color_world(world: List[List[Cell]]):

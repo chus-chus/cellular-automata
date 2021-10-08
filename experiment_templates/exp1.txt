@@ -2,8 +2,10 @@
 sparse
 --epochs
 300
---popDensity
-0.2
+--totalPopDensity
+0.1
+--stablePopDensity
+0.8
 --mutationProb
 0.25
 --damageProb
