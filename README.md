@@ -1,8 +1,8 @@
 # Cellular automata simulator
 
-### Simulator for the study of genetically stable and mutator cells in a cancer setting
+### Simulator for the study of genetically stable and mutator cell populations in a cancer setting
 
-<img src="https://github.com/chus-chus/cellular-automata/tree/master/example_figures/header_system_evolution.gif" width="150" height="150"/>
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/header_system_evolution.gif" width="150" height="150"/>
 
 ## Installation
 
@@ -33,7 +33,7 @@ experiments in `.txt` files. For example, changing parameters from the command l
 python3 main.py --epochs 150 --mutatorRR 0.4
 ```
 
-A handy way of launching experiments is by speciying the parameters
+A handy way of launching experiments is by specifying the parameters
 in `.txt` files. These need to be in the `experiment_templates` folder. They
 have to follow this format (changing the same params as in the prev. example):
 
@@ -86,12 +86,12 @@ That is, a simulation with 100 epochs, where the replication rates and repair pr
 and stable cells. Other parameters are set to default. This outputs the following figures in the corresponding folder 
 of `experiment_results/`:
 
-<img src="https://github.com/chus-chus/cellular-automata/tree/master/example_figures/system_evolution.gif" width="150" height="150" />
-<img src="https://github.com/chus-chus/cellular-automata/tree/master/example_figures/total_population_evolution.gif" width="150" height="150" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/system_evolution.gif" width="150" height="150" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/total_population_evolution.png" width="150" height="150" />
 
-<img src="https://github.com/chus-chus/cellular-automata/tree/master/example_figures/healthy_population_evolution.gif" width="150" height="150" />
-<img src="https://github.com/chus-chus/cellular-automata/tree/master/example_figures/damaged_population_evolution.gif" width="150" height="150" />
-<img src="https://github.com/chus-chus/cellular-automata/tree/master/example_figures/mutated_population_evolution.gif" width="150" height="150" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/healthy_population_evolution.png" width="150" height="150" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/damaged_population_evolution.png" width="150" height="150" />
+<img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/mutated_population_evolution.png" width="150" height="150" />
 
 ## Acknowledgements
 This work has been created for the subject *Mathematical Models in Biology* of the Master of Mathematics @ UPC. The corresponding report
