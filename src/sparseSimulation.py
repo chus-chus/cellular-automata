@@ -1,4 +1,5 @@
 import os
+from copy import copy
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -18,21 +19,16 @@ SIMULATIONSTATS = {'stable': {'total': [], 'healthy': [], 'damaged': [], 'mutate
 def init_world(world: List[List[Cell]], density: float, stableRR: float, mutatorRR: float,
                rng: np.random.default_rng) -> None:
     """ Initialise grid with stable or mutator cells. There are density * len(world) cells placed, half of them
-     being stable and half of them being mutator. A proportion of these cells are mutated according to a mutation
-     probability. """
+     being stable and half of them being mutator. """
 
     rows = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
     cols = rng.choice(len(world), size=round(len(world) * len(world) * density), replace=True)
 
     for i in range(0, len(cols) // 2):
         world[rows[i]][cols[i]] = Cell('stable', replicationRate=stableRR)
-        if rng.uniform() < world[rows[i]][cols[i]].mutationProb:
-            world[rows[i]][cols[i]].state = cellStates['mutated']
 
     for i in range(len(cols) // 2, len(cols)):
         world[rows[i]][cols[i]] = Cell('mutator', replicationRate=mutatorRR)
-        if rng.uniform() < world[rows[i]][cols[i]].mutationProb:
-            world[rows[i]][cols[i]].state = cellStates['mutated']
 
     return
 
@@ -111,7 +107,7 @@ def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.de
      if one of those is of the same type and the other one is empty will the cell replicate, the new one
      being of the same type. """
 
-    centerCell = world[row][col]
+    centerCell = copy(world[row][col])
 
     # replication only happens for mutated or healthy cells
     if centerCell.state == cellStates['damaged']:
@@ -147,15 +143,16 @@ def autoreplicate(world: List[List[Cell]], row: int, col: int, rng: np.random.de
 
 
 def mutate(world, row, col, rng):
-    centerCell = world[row][col]
+    centerCell = copy(world[row][col])
 
-    # mutation only happens for healthy cells
-    if centerCell.state == cellStates['damaged'] or centerCell.state == cellStates['mutated']:
+    # mutation only happens for –--healthy--- damaged cells
+    if centerCell.state == cellStates['healthy'] or centerCell.state == cellStates['mutated']:
         return
 
     targetCellIndexes = choose_moore_domain(row, col, 2, len(world), rng)
     # check what is in each of the picked grid spots and replicate accordingly
     nullFirstCell = True
+    mutated = False
     for i, cellIndex in enumerate(targetCellIndexes):
         targetCell = world[cellIndex[0]][cellIndex[1]]
         if i == 0 and targetCell is not None:
@@ -169,6 +166,7 @@ def mutate(world, row, col, rng):
                     # mutation with some probability!
                     if rng.uniform() < centerCell.mutationProb:
                         world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = targetCell
+                        mutated = True
             elif not nullFirstCell and targetCell is not None:
                 # both cells are full, no mutation
                 return
@@ -178,26 +176,29 @@ def mutate(world, row, col, rng):
                     # mutation with some probability!
                     if rng.uniform() < centerCell.mutationProb:
                         world[cellIndex[0]][cellIndex[1]] = firstCell
+                        mutated = True
+    # if mutation by moore domain has not happened, a small chance of mutation exists to jumpstart
+    if not mutated:
+        if rng.uniform() < 0.01 * centerCell.mutationProb:
+            world[row][col].state = cellStates['mutated']
     return
 
 
-def damage(world, row, col, rng):
-    centerCell = world[row][col]
-
+def damage(world, row, col, damageProb, rng):
+    centerCell = copy(world[row][col])
     # only healthy cells get genetic damage
     if centerCell.state == cellStates['damaged'] or centerCell.state == cellStates['mutated']:
         return
 
-    if rng.uniform() < centerCell.damageProb:
-        world[row][col].state = cellStates['damaged']
-
-    return
+    if rng.uniform() < damageProb:
+        centerCell.state = cellStates['damaged']
+        world[row][col] = centerCell
 
 
 def degradation_or_repair(world, row, col, rng):
     """ In degradation, either the damaged cell dies or it gets repaired. """
 
-    centerCell = world[row][col]
+    centerCell = copy(world[row][col])
 
     # only damaged cells get degradated or repaired
     if centerCell.state == cellStates['healthy'] or centerCell.state == cellStates['mutated']:
@@ -214,16 +215,19 @@ def degradation_or_repair(world, row, col, rng):
 def diffusion(world, row, col, rng, diffusionRate):
     """ Diffusion (swap) stage """
 
-    centerCell = world[row][col]
+    centerCell = copy(world[row][col])
     targetCellIndexes = choose_moore_domain(row, col, 1, len(world), rng)
 
-    if targetCellIndexes[0] is not None:
-        if rng.uniform() < diffusionRate:
+    if rng.uniform() < diffusionRate:
+        if targetCellIndexes[0] is not None:
             world[row][col] = world[targetCellIndexes[0][0]][targetCellIndexes[0][1]]
-            world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = centerCell
+        else:
+            world[row][col] = None
+        world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = centerCell
 
 
-def forward_generation(world: List[List[Cell]], diffusionRate: float, rng: np.random.default_rng) -> dict:
+def forward_generation(world: List[List[Cell]], diffusionRate: float,
+                       damageProb: float, rng: np.random.default_rng) -> dict:
 
     """ An evolution epoch. That is, :math:`L^2` random grid spots are chosen. If it's empty, do nothing.
      If a cell is in the grid spot, perform the following steps:
@@ -248,8 +252,8 @@ def forward_generation(world: List[List[Cell]], diffusionRate: float, rng: np.ra
             continue
         else:
             autoreplicate(world, row, col, rng)
-            # mutate(world, row, col, rng)
-            damage(world, row, col, rng)
+            damage(world, row, col, damageProb, rng)
+            mutate(world, row, col, rng)
             degradation_or_repair(world, row, col, rng)
             diffusion(world, row, col, rng, diffusionRate)
 
@@ -264,10 +268,11 @@ def sparse_simulation(args, rng):
     # worldSize = args['worldSize']
     worldSize = 50
     density = 0.1
-    rrMutant = 1.5
+    rrMutant = 3
     rrStable = 1.1
     epochs = 150
     diffRate = 0.05
+    damageProb = 0.02
     animate = True
 
     dirName = f'experiment_{datetime.now().strftime("%d%m%Y_%H%M%S")}'
@@ -289,7 +294,7 @@ def sparse_simulation(args, rng):
             return im
 
         def animate_frame(_):
-            forward_generation(world, diffRate, rng)
+            forward_generation(world, diffRate, damageProb, rng)
             im.set_data(color_world(world))
             return im
 
@@ -297,7 +302,7 @@ def sparse_simulation(args, rng):
         anim.save(f'{dirName}/system_evolution.gif', fps=5)
     else:
         for i in range(epochs):
-            forward_generation(world, diffRate, rng)
+            forward_generation(world, diffRate, damageProb, rng)
 
     gen_save_plots(epochs, SIMULATIONSTATS, currentPath / dirName)
 

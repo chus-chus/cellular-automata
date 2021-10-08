@@ -35,15 +35,13 @@ class Cell(object):
     def __init__(self, cellType: str = 'stable',
                  cellState: str = 'healthy',
                  replicationRate: float = 1,
-                 damageProb: float = 0.005,
-                 repairProb: float = 0.05,
+                 repairProb: float = 0.95,
                  deathProb: float = 0.05,
-                 mutationProb: float = 0.1):
+                 mutationProb: float = 0.3):
 
         self.type = cellTypes[cellType]
         self.state = cellStates[cellState]
         self.replicationRate = replicationRate
-        self.damageProb = damageProb
         self.repairProb = repairProb
         self.deathProb = deathProb
         self.mutationProb = mutationProb
