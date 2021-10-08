@@ -8,7 +8,8 @@ from matplotlib import animation
 import numpy as np
 from typing import List
 
-from utils import Cell, cellStates, color_world, cellTypes, gen_save_plots, init_world
+from utils import Cell, cellStates, color_world, cellTypes, gen_save_plots, init_world, choose_moore_domain, \
+    precompute_moore_domain
 
 import pathlib
 
@@ -60,35 +61,6 @@ def update_statistics(world):
     SIMULATIONSTATS['mutator']['mutated'].append(mutatorMutated)
 
     return
-
-
-def precompute_moore_domain(world):
-    mooreDomain = deepcopy(world)
-    for i in range(len(mooreDomain)):
-        for j in range(len(mooreDomain)):
-            domain = [[i - 1, j - 1], [i - 1, j], [i - 1, j + 1],
-                      [i,     j - 1],             [i,     j + 1],
-                      [i + 1, j - 1], [i + 1, j], [i + 1, j + 1]]
-
-            # parse invalid indexes (edges)
-            for t in range(len(domain)):
-                if domain[t][0] >= len(world) or domain[t][0] < 0:
-                    domain[t][0] = None
-                if domain[t][1] >= len(world) or domain[t][1] < 0:
-                    domain[t][1] = None
-
-            # delete invalid indexes (edges)
-            mooreDomain[i][j] = [index for index in domain if index[0] is not None and index[1] is not None]
-
-    return mooreDomain
-
-
-def choose_moore_domain(row, col, mooreDomain, n, rng) -> np.ndarray:
-    """ Choose n indexes w/o replacement in the moore domain centered around i, j. Does not consider grid edges.
-
-    :return: a list of indexes as lists. """
-
-    return rng.choice(mooreDomain[row][col], size=n, replace=False)
 
 
 def autoreplicate(world: List[List[Cell]], row: int, col: int, mooreDomain, rng: np.random.default_rng) -> None:
@@ -282,6 +254,12 @@ def sparse_simulation(args, rng):
         fig = plt.figure()
         data = np.zeros((worldSize, worldSize, 3))
         im = plt.imshow(data)
+
+        plt.tick_params(axis='both',  # changes apply to the x-axis
+                        which='both',  # both major and minor ticks are affected
+                        bottom=False,  # ticks along the bottom edge are off
+                        top=False,  # ticks along the top edge are off
+                        labelbottom=False)
 
         def init():
             im.set_data(np.zeros((worldSize, worldSize, 3)))

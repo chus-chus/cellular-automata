@@ -1,13 +1,17 @@
 --stateCase
 sparse
 --epochs
-300
+500
 --totalPopDensity
 0.1
 --stablePopDensity
-0.8
+0.5
 --mutationProb
 0.25
+--mutatorRR
+50
+--stableRR
+1
 --damageProb
 0.1
 --stableRepairProb
@@ -15,4 +19,4 @@ sparse
 --mutatorRepairProb
 0.15
 --createAnimation
-True
+False
