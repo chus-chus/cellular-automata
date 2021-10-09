@@ -23,9 +23,9 @@ __DARK_GREEN = [40, 100, 10]
 __BLUE = [100, 190, 210]
 # __DARK_BLUE = [0, 0, 255]
 
-colors = {cellTypes['stable']: {cellStates['healthy']: __GREEN, cellStates['repairing']: __GREEN,
+colors = {cellTypes['stable']: {cellStates['healthy']: __GREEN, cellStates['repairing']: __DARK_GREEN,
                                 cellStates['mutated']: __DARK_GREEN, cellStates['damaged']: __BLUE},
-          cellTypes['mutator']: {cellStates['healthy']: __RED, cellStates['repairing']: __RED,
+          cellTypes['mutator']: {cellStates['healthy']: __RED, cellStates['repairing']: __DARK_RED,
                                  cellStates['mutated']: __DARK_RED, cellStates['damaged']: __BLUE},
           'empty': __WHITE}
 
@@ -33,7 +33,8 @@ colors = {cellTypes['stable']: {cellStates['healthy']: __GREEN, cellStates['repa
 class Cell(object):
     """ Represents a basic cell, of stable or mutant tyes and with healthy, repairing or mutated states. """
 
-    def __init__(self, cellType: str = 'stable',
+    def __init__(self,
+                 cellType: str = 'stable',
                  cellState: str = 'healthy',
                  replicationRate: float = 1,
                  repairProb: float = 0.95):
@@ -132,7 +133,7 @@ def gen_save_plots(epochs, stats, path):
 
     x = list(range(epochs))
 
-    # total population numberes
+    # total population numbers
     gen_barplot_two_lines(x=x, y1=stats['stable']['total'],
                           y2=stats['mutator']['total'],
                           xlabel='Epoch', ylabel='Number of cells',

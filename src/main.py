@@ -8,6 +8,7 @@ import argparse
 import numpy as np
 
 from sparseSimulation import sparse_simulation
+from denseSimulation import dense_simulation
 from utils import str2bool
 
 
@@ -41,7 +42,7 @@ def main():
     mRProbHelp = 'Probability of a damaged stable cell repairing.'
     parser.add_argument('--mutatorRepairProb', type=float, default=.1, help=mRProbHelp)
 
-    parser.add_argument('--arrestProb', type=float, default=.01, help='Probability of cycle arrest during repair.')
+    parser.add_argument('--arrestProb', type=float, default=.3, help='Probability of cycle arrest during repair.')
 
     animationHelp = 'Create an animation depicting the evolution of the population?'
     parser.add_argument('--createAnimation', type=str2bool, default='True', help=animationHelp)
@@ -54,7 +55,7 @@ def main():
     if args.stateCase == 'sparse':
         sparse_simulation(args, rng)
     else:
-        raise NotImplementedError
+        dense_simulation(args, rng)
 
     return
 
