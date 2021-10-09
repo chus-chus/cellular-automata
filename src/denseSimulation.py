@@ -14,7 +14,8 @@ from utils import Cell, cellStates, color_world, cellTypes, gen_save_plots, init
 import pathlib
 
 SIMULATIONSTATS = {'stable': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []},
-                   'mutator': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []}}
+                   'mutator': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []},
+                   'stableVictories': 0, 'mutatorVictories': 0}
 
 
 def update_statistics(world):
@@ -90,7 +91,7 @@ def apply_rules(world: List[List], row: int, col: int, damageProb: float, mutati
                     # dies
                     world[row][col] = None
 
-    if centerCell.state == cellStates['repairing'] and rng.uniform() < 1-arrestProb:
+    if centerCell.state == cellStates['repairing'] and rng.uniform() < arrestProb:
         # repairs itself
         world[row][col].state = cellStates['healthy']
 
@@ -101,7 +102,7 @@ def apply_rules(world: List[List], row: int, col: int, damageProb: float, mutati
     return
 
 def forward_generation(world: List[List], damageProb: float, deathProb: float,
-                       mutationProb: float, arrestProb: float, mooreDomain, rng: np.random.default_rng) -> dict:
+                       mutationProb: float, arrestProb: float, mooreDomain, save_stats: bool, rng: np.random.default_rng) -> dict:
 
     """ An evolution epoch. That is, :math:`L^2` random grid spots are chosen. If it's empty, do nothing.
         If a cell is in the grid spot, it replicates and the model's rules are applied in order to change
@@ -122,7 +123,7 @@ def forward_generation(world: List[List], damageProb: float, deathProb: float,
             replicate(world, row, col, mooreDomain, rng)
             apply_rules(world, row, col, damageProb, mutationProb, arrestProb, deathProb, rng)
 
-    update_statistics(world)
+    if save_stats: update_statistics(world)
 
     return
 
@@ -140,6 +141,7 @@ def dense_simulation(args, rng):
     mutationProb = args.mutationProb
     arrestProb = args.arrestProb
     animate = args.createAnimation
+    iterations = args.iterations
 
     expName = f'experiment_{datetime.now().strftime("%d%m%Y_%H%M%S")}'
     currentPath = pathlib.Path(__file__).parent.resolve()
@@ -157,38 +159,69 @@ def dense_simulation(args, rng):
     world = [[None for _ in range(worldSize)] for _ in range(worldSize)]
 
     mooreDomain = precompute_moore_domain(world)
-    init_world(world, totalPopDensity, stableDensity, args, rng)
 
-    if animate:
-        fig = plt.figure()
-        data = np.zeros((worldSize, worldSize, 3))
-        im = plt.imshow(data)
+    if iterations == 1:
+        save_stats = True
+        init_world(world, totalPopDensity, stableDensity, args, rng)
 
-        plt.tick_params(axis='both',  # changes apply to both
-                        which='both',  # both major and minor ticks are affected
-                        bottom=False,  # ticks along the bottom edge are off
-                        top=False,  # ticks along the top edge are off
-                        left=False,
-                        labelleft=False,
-                        labelbottom=False)
+        if animate:
+            fig = plt.figure()
+            data = np.zeros((worldSize, worldSize, 3))
+            im = plt.imshow(data)
 
-        def init():
-            im.set_data(np.zeros((worldSize, worldSize, 3)))
-            return im
+            plt.tick_params(axis='both',  # changes apply to both
+                            which='both',  # both major and minor ticks are affected
+                            bottom=False,  # ticks along the bottom edge are off
+                            top=False,  # ticks along the top edge are off
+                            left=False,
+                            labelleft=False,
+                            labelbottom=False)
 
-        def animate_frame(_):
-            forward_generation(world, damageProb, deathProb, mutationProb, arrestProb, mooreDomain, rng)
-            im.set_data(color_world(world))
-            return im
+            def init():
+                im.set_data(np.zeros((worldSize, worldSize, 3)))
+                return im
 
-        anim = animation.FuncAnimation(fig, animate_frame, init_func=init, frames=epochs)
-        anim.save(f'{figurePath}/{expName}/system_evolution.gif', fps=min(max(10, epochs / 20), 24))
-    else:
-        for i in range(epochs):
-            #if i == 250: damageProb = 0.9
-            forward_generation(world, damageProb, deathProb, mutationProb, arrestProb, mooreDomain, rng)
+            def animate_frame(_):
+                forward_generation(world, damageProb, deathProb, mutationProb, arrestProb, mooreDomain, save_stats, rng)
+                im.set_data(color_world(world))
+                return im
 
-    gen_save_plots(epochs, SIMULATIONSTATS, figurePath / expName)
+            anim = animation.FuncAnimation(fig, animate_frame, init_func=init, frames=epochs)
+            anim.save(f'{figurePath}/{expName}/system_evolution.gif', fps=min(max(10, epochs / 20), 24))
+        else:
+            for i in range(epochs):
+                forward_generation(world, damageProb, deathProb, mutationProb, arrestProb, mooreDomain, save_stats, rng)
+
+        gen_save_plots(epochs, SIMULATIONSTATS, figurePath / expName)
+
+    elif iterations > 1:
+        save_stats = False
+        for i in range(iterations):
+            new_seed = rng.integers(10000000)
+            new_rng = np.random.default_rng(new_seed)
+            init_world(world, totalPopDensity, stableDensity, args, new_rng)
+
+            for _ in range(epochs):
+                forward_generation(world, damageProb, deathProb, mutationProb, arrestProb, mooreDomain, save_stats, rng)
+
+            stableCells = 0
+            mutatorCells = 0
+            for i in range(len(world)):
+                for j in range(len(world)):
+                    if world[i][j] is not None:
+                        if world[i][j].type == cellTypes['stable']:
+                            stableCells += 1
+                        else:
+                            mutatorCells += 1
+
+            if mutatorCells > stableCells:
+                SIMULATIONSTATS['mutatorVictories'] += 1
+            else:
+                SIMULATIONSTATS['stableVictories'] += 1
+
+        print(f"iterations: {iterations}\n"
+              f"stable cell victories: {SIMULATIONSTATS['stableVictories']}"
+              f"mutator cell victories: {SIMULATIONSTATS['mutatorVictories']}")
 
 
 def main():

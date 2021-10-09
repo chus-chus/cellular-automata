@@ -16,16 +16,18 @@ cellStates = {'healthy': 0, 'repairing': 1, 'mutated': 2, 'damaged': 3}
 # grid colors
 __WHITE = [255, 255, 255]
 __BLACK = [0, 0, 0]
+__LIGHT_RED = [255, 125, 100]
 __RED = [230, 80, 50]
 __DARK_RED = [150, 30, 10]
+__LIGHT_GREEN = [150, 240, 100]
 __GREEN = [120, 230, 60]
 __DARK_GREEN = [40, 100, 10]
 __BLUE = [100, 190, 210]
 # __DARK_BLUE = [0, 0, 255]
 
-colors = {cellTypes['stable']: {cellStates['healthy']: __GREEN, cellStates['repairing']: __DARK_GREEN,
+colors = {cellTypes['stable']: {cellStates['healthy']: __GREEN, cellStates['repairing']: __LIGHT_GREEN,
                                 cellStates['mutated']: __DARK_GREEN, cellStates['damaged']: __BLUE},
-          cellTypes['mutator']: {cellStates['healthy']: __RED, cellStates['repairing']: __DARK_RED,
+          cellTypes['mutator']: {cellStates['healthy']: __RED, cellStates['repairing']: __LIGHT_RED,
                                  cellStates['mutated']: __DARK_RED, cellStates['damaged']: __BLUE},
           'empty': __WHITE}
 
@@ -140,7 +142,7 @@ def gen_save_plots(epochs, stats, path):
                           line1Legend='Stable cells', line2Legend='Mutator cells',
                           plotTitle='Total population evolution',
                           filepath=path, filename='total_population_evolution')
-
+    '''
     clear_plots()
     # healthy cells
     gen_barplot_two_lines(x=x, y1=stats['stable']['healthy'],
@@ -165,6 +167,7 @@ def gen_save_plots(epochs, stats, path):
                           line1Legend='Stable cells', line2Legend='Mutator cells',
                           plotTitle='Damaged population evolution',
                           filepath=path, filename='damaged_population_evolution')
+    '''
 
 
 def str2bool(v):

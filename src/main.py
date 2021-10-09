@@ -31,18 +31,20 @@ def main():
     parser.add_argument('--mutatorRR', type=float, default=2., help='Replication rate of mutator cells.')
     parser.add_argument('--stableRR', type=float, default=1., help='Replication rate of stable cells.')
 
-    parser.add_argument('--diffusionRate', type=float, default=.01, help='Diffusion rate.')
-    parser.add_argument('--damageProb', type=float, default=.02, help='Genetic hit rate.')
-
-    parser.add_argument('--deathProb', type=float, default=.05, help='Probability of a damaged cell dying.')
-    parser.add_argument('--mutationProb', type=float, default=.1, help='Probability of a damaged cell mutating.')
-
     sRProbHelp = 'Probability of a damaged stable cell repairing.'
     parser.add_argument('--stableRepairProb', type=float, default=.99, help=sRProbHelp)
     mRProbHelp = 'Probability of a damaged stable cell repairing.'
     parser.add_argument('--mutatorRepairProb', type=float, default=.1, help=mRProbHelp)
 
-    parser.add_argument('--arrestProb', type=float, default=.3, help='Probability of cycle arrest during repair.')
+    parser.add_argument('--diffusionRate', type=float, default=.01, help='Diffusion rate.')
+    parser.add_argument('--arrestProb', type=float, default=.3, help='Probability of ending cell arrest due to repair.')
+
+    parser.add_argument('--damageProb', type=float, default=.02, help='Genetic hit rate.')
+    parser.add_argument('--deathProb', type=float, default=.05, help='Probability of a damaged cell dying.')
+    parser.add_argument('--mutationProb', type=float, default=.1, help='Probability of a damaged cell mutating.')
+
+    parser.add_argument('--iterations', type=int, default=1, help='Number of times the simulation is done,'
+                                                                  'each time with different seeds.')
 
     animationHelp = 'Create an animation depicting the evolution of the population?'
     parser.add_argument('--createAnimation', type=str2bool, default='True', help=animationHelp)
