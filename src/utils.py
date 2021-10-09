@@ -53,13 +53,13 @@ def init_world(world: List[List[Cell]], totalDensity: float, stableDensity: floa
     rows = rng.choice(len(world), size=round(len(world) * len(world) * totalDensity), replace=True)
     cols = rng.choice(len(world), size=round(len(world) * len(world) * totalDensity), replace=True)
 
-    for i in range(0, int(len(cols) * stableDensity)):
-        world[rows[i]][cols[i]] = Cell('stable', replicationRate=args.stableRR,
-                                       repairProb=args.stableRepairProb)
-
-    for i in range(int(len(cols) * stableDensity), len(cols)):
-        world[rows[i]][cols[i]] = Cell('mutator', replicationRate=args.mutatorRR,
-                                       repairProb=args.mutatorRepairProb)
+    for i in range(len(rows)):
+        if rng.uniform() < stableDensity:
+            world[rows[i]][cols[i]] = Cell('stable', replicationRate=args.stableRR,
+                                           repairProb=args.stableRepairProb)
+        else:
+            world[rows[i]][cols[i]] = Cell('mutator', replicationRate=args.mutatorRR,
+                                           repairProb=args.mutatorRepairProb)
 
     return
 
