@@ -223,7 +223,7 @@ def forward_generation(world: List[List[Cell]], diffusionRate: float, damageProb
     return
 
 
-def sparse_simulation(args, rng):
+def case_b_simulation(args, rng):
     """ In this simulation, cells can only be in healthy, mutated or damaged states. """
 
     worldSize = args.worldSize
@@ -286,7 +286,7 @@ def sparse_simulation(args, rng):
 
 
 def main():
-    sparse_simulation(None, np.random.default_rng(0))
+    case_b_simulation(None, np.random.default_rng(0))
 
 
 if __name__ == "__main__":

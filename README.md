@@ -28,8 +28,7 @@ Get help on the parameters by calling
 python3 main.py --help
 ```
 
-You can change any parameter in either the command line or specify parameters for particular 
-experiments in `.txt` files. For example, changing parameters from the command line:
+You can change any parameter in the command line or via `.txt` files, which allows for easier experimentation. For example, changing parameters from the command line:
 
 ```
 python3 main.py --epochs 150 --mutatorRR 0.4

@@ -1,5 +1,5 @@
---stateCase
-sparse
+--simulationType
+caseB
 --totalPopDensity
 0.2
 --stablePopDensity

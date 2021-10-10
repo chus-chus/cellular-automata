@@ -1,5 +1,5 @@
---stateCase
-dense
+--simulationType
+caseA
 --epochs
 100
 --worldSize

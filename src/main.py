@@ -1,14 +1,10 @@
-""" Cellular automata: competition dynamics of mutator and stable cell populations
-
-Jesús Antoñanzas
-Maria Elzaurdi
-Jordan Ortiz """
+""" Cellular automata: competition dynamics of mutator and stable cell populations """
 
 import argparse
 import numpy as np
 
-from sparseSimulation import sparse_simulation
-from denseSimulation import dense_simulation
+from caseBSimulation import case_b_simulation
+from caseASimulation import case_a_simulation
 from utils import str2bool
 
 
@@ -17,7 +13,7 @@ def main():
 
     stateCaseHelp = """ Initial state of the cell population. 'sparse' only has a few stable cells and unstable cells, 
      while 'dense' has the board full of stable cells with a small cluster of already established mutator cells. """
-    parser.add_argument('--stateCase', choices=['sparse', 'dense'], default='sparse', help=stateCaseHelp)
+    parser.add_argument('--simulationType', choices=['caseA', 'caseB'], default='caseB', help=stateCaseHelp)
 
     totalPopDensityHelp = 'Total initial population density.'
     parser.add_argument('--totalPopDensity', type=float, default=0.2, help=totalPopDensityHelp)
@@ -54,10 +50,10 @@ def main():
 
     rng = np.random.default_rng(args.randomSeed)
 
-    if args.stateCase == 'sparse':
-        sparse_simulation(args, rng)
+    if args.simulationType == 'caseA':
+        case_a_simulation(args, rng)
     else:
-        dense_simulation(args, rng)
+        case_b_simulation(args, rng)
 
     return
 

@@ -128,14 +128,12 @@ def forward_generation(world: List[List], damageProb: float, deathProb: float,
     return
 
 
-def dense_simulation(args, rng):
-    """ In this simulation, . """
+def case_a_simulation(args, rng):
 
     worldSize = args.worldSize
     totalPopDensity = args.totalPopDensity
     stableDensity = args.stablePopDensity
     epochs = args.epochs
-    diffRate = args.diffusionRate
     damageProb = args.damageProb
     deathProb = args.deathProb
     mutationProb = args.mutationProb
@@ -225,7 +223,8 @@ def dense_simulation(args, rng):
 
 
 def main():
-    dense_simulation(None, np.random.default_rng(0))
+    case_a_simulation(None, np.random.default_rng(0))
+
 
 if __name__ == "__main__":
     main()
