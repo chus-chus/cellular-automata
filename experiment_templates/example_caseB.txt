@@ -1,5 +1,7 @@
 --epochs
-100
+10
+--iterations
+2
 --mutatorRR
 5
 --stableRR

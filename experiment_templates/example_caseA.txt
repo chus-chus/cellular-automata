@@ -1,7 +1,7 @@
 --simulationType
 caseA
 --epochs
-100
+5
 --worldSize
 50
 --totalPopDensity
@@ -24,9 +24,9 @@ caseA
 0.05
 --deathProb
 0.5
---createAnimation
-True
 --iterations
 1
+--createAnimation
+True
 --randomSeed
 0

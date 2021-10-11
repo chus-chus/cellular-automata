@@ -9,58 +9,9 @@ import numpy as np
 from typing import List
 
 from utils import Cell, cellStates, color_world, cellTypes, gen_save_plots, init_world, choose_moore_domain, \
-    precompute_moore_domain, parse_all_params
+    precompute_moore_domain, parse_all_params, update_statistics, simulation_skeleton
 
 import pathlib
-
-SIMULATIONSTATS = {'stable': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []},
-                   'mutator': {'total': [], 'healthy': [], 'damaged': [], 'mutated': []}}
-
-
-def update_statistics(world):
-    """ Updates or creates a dict with statistics of the current world """
-
-    stableCells = 0
-    stableMutated = 0
-    stableDamaged = 0
-    stableHealthy = 0
-
-    mutatorCells = 0
-    mutatorMutated = 0
-    mutatorDamaged = 0
-    mutatorHealthy = 0
-
-    for i in range(len(world)):
-        for j in range(len(world)):
-            if world[i][j] is not None:
-                if world[i][j].type == cellTypes['stable']:
-                    stableCells += 1
-                    if world[i][j].state == cellStates['mutated']:
-                        stableMutated += 1
-                    elif world[i][j].state == cellStates['damaged']:
-                        stableDamaged += 1
-                    elif world[i][j].state == cellStates['healthy']:
-                        stableHealthy += 1
-                else:
-                    mutatorCells += 1
-                    if world[i][j].state == cellStates['mutated']:
-                        mutatorMutated += 1
-                    elif world[i][j].state == cellStates['damaged']:
-                        mutatorDamaged += 1
-                    elif world[i][j].state == cellStates['healthy']:
-                        mutatorHealthy += 1
-
-    SIMULATIONSTATS['stable']['total'].append(stableCells)
-    SIMULATIONSTATS['stable']['healthy'].append(stableHealthy)
-    SIMULATIONSTATS['stable']['damaged'].append(stableDamaged)
-    SIMULATIONSTATS['stable']['mutated'].append(stableMutated)
-
-    SIMULATIONSTATS['mutator']['total'].append(mutatorCells)
-    SIMULATIONSTATS['mutator']['healthy'].append(mutatorHealthy)
-    SIMULATIONSTATS['mutator']['damaged'].append(mutatorDamaged)
-    SIMULATIONSTATS['mutator']['mutated'].append(mutatorMutated)
-
-    return
 
 
 def autoreplicate(world: List[List[Cell]], row: int, col: int, mooreDomain, rng: np.random.default_rng) -> None:
@@ -187,8 +138,9 @@ def diffusion(world, row, col, rng, mooreDomain, diffusionRate):
         world[targetCellIndexes[0][0]][targetCellIndexes[0][1]] = centerCell
 
 
-def forward_generation(world: List[List[Cell]], diffusionRate: float, damageProb: float,
-                       deathProb: float, mutationProb: float, mooreDomain, rng: np.random.default_rng) -> dict:
+def case_b_forward_function(world: List[List[Cell]], diffusionRate: float, damageProb: float,
+                            deathProb: float, mutationProb: float, mooreDomain, prevStats:dict,
+                            rng: np.random.default_rng) -> dict:
 
     """ An evolution epoch. That is, :math:`L^2` random grid spots are chosen. If it's empty, do nothing.
      If a cell is in the grid spot, perform the following steps:
@@ -218,76 +170,16 @@ def forward_generation(world: List[List[Cell]], diffusionRate: float, damageProb
             degradation_or_repair(world, row, col, deathProb, rng)
             diffusion(world, row, col, rng, mooreDomain, diffusionRate)
 
-    update_statistics(world)
+    stats = update_statistics(world, prevStats)
 
-    return
+    return stats
 
 
 def case_b_simulation(args, rng):
     """ In this simulation, cells can only be in healthy, mutated or damaged states. """
 
-    worldSize = args.worldSize
-    totalPopDensity = args.totalPopDensity
-    stableDensity = args.stablePopDensity
-    epochs = args.epochs
-    diffRate = args.diffusionRate
-    damageProb = args.damageProb
-    deathProb = args.deathProb
-    mutationProb = args.mutationProb
-    animate = args.createAnimation
+    ff_args = {'damageProb': args.damageProb, 'deathProb': args.deathProb, 'mutationProb': args.mutationProb,
+               'diffusionRate': args.diffusionRate}
 
-    expName = f'experiment_{datetime.now().strftime("%d%m%Y_%H%M%S")}'
-    currentPath = pathlib.Path(__file__).parent.resolve()
-
-    figurePath = currentPath.parent.resolve() / 'experiment_results/'
-    if not figurePath.exists():
-        os.mkdir(figurePath)
-
-    os.mkdir(figurePath / expName)
-
-    # save parameters of the experiment
-    with open(figurePath / expName / "params.txt", "w") as file:
-        file.write(parse_all_params(args))
-
-    world = [[None for _ in range(worldSize)] for _ in range(worldSize)]
-
-    mooreDomain = precompute_moore_domain(world)
-    init_world(world, totalPopDensity, stableDensity, args, rng)
-
-    if animate:
-        fig = plt.figure()
-        data = np.zeros((worldSize, worldSize, 3))
-        im = plt.imshow(data)
-
-        plt.tick_params(axis='both',  # changes apply to both
-                        which='both',  # both major and minor ticks are affected
-                        bottom=False,  # ticks along the bottom edge are off
-                        top=False,  # ticks along the top edge are off
-                        left=False,
-                        labelleft=False,
-                        labelbottom=False)
-
-        def init():
-            im.set_data(np.zeros((worldSize, worldSize, 3)))
-            return im
-
-        def animate_frame(_):
-            forward_generation(world, diffRate, damageProb, deathProb, mutationProb, mooreDomain, rng)
-            im.set_data(color_world(world))
-            return im
-
-        anim = animation.FuncAnimation(fig, animate_frame, init_func=init, frames=epochs)
-        anim.save(f'{figurePath}/{expName}/system_evolution.gif', fps=min(max(10, epochs / 20), 24))
-    else:
-        for i in range(epochs):
-            forward_generation(world, diffRate, damageProb, deathProb, mutationProb, mooreDomain, rng)
-
-    gen_save_plots(epochs, SIMULATIONSTATS, figurePath / expName)
-
-
-def main():
-    case_b_simulation(None, np.random.default_rng(0))
-
-
-if __name__ == "__main__":
-    main()
+    simulation_skeleton(args, rng, case_b_forward_function, args.worldSize, args.iterations, args.totalPopDensity,
+                        args.stablePopDensity, args.createAnimation, args.epochs, ff_args)

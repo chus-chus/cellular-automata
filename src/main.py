@@ -39,7 +39,7 @@ def main():
     parser.add_argument('--deathProb', type=float, default=.05, help='Probability of a damaged cell dying.')
     parser.add_argument('--mutationProb', type=float, default=.1, help='Probability of a damaged cell mutating.')
 
-    parser.add_argument('--iterations', type=int, default=1, help='Number of times the simulation is done,'
+    parser.add_argument('--iterations', type=int, default=1, help='Number of times the simulation is performed,'
                                                                   'each time with different seeds.')
 
     animationHelp = 'Create an animation depicting the evolution of the population?'
