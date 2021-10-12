@@ -168,7 +168,19 @@ def update_mean_stats(stats, meanSimulationStats, iterations):
 def simulation_skeleton(args, rng, forward_func, worldSize, iterations, totalPopDensity, stableDensity,
                         animate, epochs, forward_func_args: dict):
 
-    """ Simulation skeleton. The forward function must have the signature used in this source. """
+    """ Simulation skeleton. The forward function must have the signature used in this source.
+
+    :param args: argparse object with the simulation parameterss
+    :param rng: np.random.default_rng object
+    :param forward_func: function that advances the simulation 1 epoch
+    :param int worldSize: width and height of the grid
+    :param int iterations: number of times the simulation will be repeated
+    :param float totalPopDensity: [0, 1] density of the total initial cell population
+    :param float stableDensity: [0, 1] relative density of the stable cell population. Unstable cells will have
+      (1-stableDensity) as initial density.
+    :param bool animate: Create an animation with the evolution of the world? Ignored if iterations > 1
+    :param int epochs: Number of world epochs per iteration.
+    :param dict forward_func_args: additional keyword arguments for forward_func """
 
     expName = f'experiment_{datetime.now().strftime("%d%m%Y_%H%M%S")}'
     currentPath = pathlib.Path(__file__).parent.resolve()

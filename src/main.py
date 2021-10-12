@@ -48,6 +48,9 @@ def main():
 
     args = parser.parse_args()
 
+    if args.iterations <= 0:
+        raise ValueError('Iterations must be > 0')
+
     rng = np.random.default_rng(args.randomSeed)
 
     if args.simulationType == 'caseA':

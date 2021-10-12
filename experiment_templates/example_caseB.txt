@@ -1,7 +1,5 @@
 --epochs
-10
---iterations
-2
+100
 --mutatorRR
 5
 --stableRR
@@ -10,7 +8,7 @@
 0.3
 --mutatorRepairProb
 0.2
---createAnimation
-True
+--iterations
+10
 --randomSeed
 1

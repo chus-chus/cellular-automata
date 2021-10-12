@@ -62,7 +62,7 @@ It contains figures regarding the evolution of cell types and their states, as w
 population evolution (only if the param `createAnimation` is `True`). It also contains a `.txt` file with 
 the params. used to run the experiment (with the correct format), making replication even easier.
 
-## Example
+## Examples
 
 We run a simulation with the following params:
 
@@ -98,6 +98,51 @@ of `experiment_results/`:
     <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/mutated_population_evolution.png" height="300"/>
 </p>
 
+We can also run a simulation and specify the number of times it's repeated with the `iterations` parameter. The plots
+generated will show the mean values across the iterations. No animation is going to be produced in this case.
+
+```
+--epochs
+100
+--mutatorRR
+5
+--stableRR
+1
+--stableRepairProb
+0.3
+--mutatorRepairProb
+0.2
+--iterations
+10
+--randomSeed
+1
+```
+
+<p align="center">
+    <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/healthy_population_evolution_mean.png" height="300"/>
+    <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/total_population_evolution_mean.png" height="300"/>
+</p>
+
+<p align="center">
+    <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/damaged_population_evolution_mean.png" height="300"/>
+    <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/mutated_population_evolution_mean.png" height="300"/>
+    <img src="https://github.com/chus-chus/cellular-automata/raw/master/example_figures/generations_won.png" height="300"/>
+</p>
+
+## Contributing
+
+New simulation schemas can be easily implemented. A `forward()` function is to be implemented which
+follows the signature in the simulation skeleton provided in `src.utils.simulation_skeleton`. Then, passing it as a parameter
+to the skeleton function along with some arguments is all it takes:
+
+```
+ff_args = {'damageProb': args.damageProb, 'deathProb': args.deathProb,
+           'mutationProb': args.mutationProb, 'arrestProb': args.arrestProb}
+
+simulation_skeleton(args, rng, case_a_forward_function, args.worldSize, args.iterations, args.totalPopDensity,
+                    args.stablePopDensity, args.createAnimation, args.epochs, ff_args)
+```
+
 ## Acknowledgements
 This work has been created for the subject *Mathematical Models in Biology* of the Master of Mathematics @ UPC. The corresponding report
-detailing the simulation models can be found in this repo.
+with an overview of the simulation models can be found in this repo.
