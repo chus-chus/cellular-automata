@@ -131,16 +131,19 @@ generated will show the mean values across the iterations. No animation is going
 
 ## Contributing
 
-New simulation schemas can be easily implemented. A `forward()` function is to be implemented which
+New simulation schemas can be easily created. A `forward()` function is to be implemented which
 follows the signature in the simulation skeleton provided in `src.utils.simulation_skeleton`. Then, passing it as a parameter
 to the skeleton function along with some arguments is all it takes:
 
 ```
+# case A simulation
+
 ff_args = {'damageProb': args.damageProb, 'deathProb': args.deathProb,
            'mutationProb': args.mutationProb, 'arrestProb': args.arrestProb}
 
-simulation_skeleton(args, rng, case_a_forward_function, args.worldSize, args.iterations, args.totalPopDensity,
-                    args.stablePopDensity, args.createAnimation, args.epochs, ff_args)
+simulation_skeleton(args, rng, case_a_forward_function, args.worldSize, args.iterations, 
+                    args.totalPopDensity, args.stablePopDensity, args.createAnimation, 
+                    args.epochs, ff_args)
 ```
 
 ## Acknowledgements
