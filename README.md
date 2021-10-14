@@ -145,7 +145,3 @@ simulation_skeleton(args, rng, case_a_forward_function, args.worldSize, args.ite
                     args.totalPopDensity, args.stablePopDensity, args.createAnimation, 
                     args.epochs, ff_args)
 ```
-
-## Acknowledgements
-This work has been created for the subject *Mathematical Models in Biology* of the Master of Mathematics @ UPC. The corresponding report
-with an overview of the simulation models can be found in this repo.
